@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>webChat</title>
+    
+    <script type="module">
+        const nombre = localStorage.getItem('autor')
+        if(nombre){
+          const autor = nombre
+        }else{
+          const res = await fetch('https://random-data-api.com/api/users/random_user')
+          const { username: randomUsername} = await res.json()
+          localStorage.setItem('autor',randomUsername)
+        }
+
+        
+        import{ io } from 'https://cdn.socket.io/4.3.2/socket.io.esm.min.js'
+
+        const socket = io()
+    
+        const form = document.getElementById('form')
+        const input = document.getElementById('input')
+        const messages1 = document.getElementById('messages')
+        const nombreAutor = document.getElementById('nombreAutor')
+        const nombreAutor2= document.getElementById('nombreAutor2')
+        const lastMsg= document.getElementById('lastMsg')
+
+
+        form.addEventListener('submit', (e)=>{
+            e.preventDefault()
+            if(input.value){
+              const messageData = {
+                autor: localStorage.getItem('autor'),
+                message: input.value
+              };
+                socket.emit('chatMessage',messageData)
+                input.value=''
+            }
+        })
+
+        // Mostrar mensajes anteriores
+        socket.on('previousMessages', (messages) => {
+          messages.forEach(({autor, message})=> {
+            if(autor===localStorage.getItem('autor')){
+              const text = `<div class="message sent">
+                <p style="margin:0;">${message} </p>  <p style="font-size:11px; color:gray; text-align:right; margin:0;">${autor}</p>
+                </div>`
+          messages1.insertAdjacentHTML('beforeend',text)
+            }else{
+              lastMsg.textContent = `${message}`
+              const text = `<div class="message received">
+                <p style="margin:0;">${message} </p>  <p style="font-size:11px; color:gray; text-align:right; margin:0;">${autor}</p>
+                </div>`
+              messages1.insertAdjacentHTML('beforeend',text)
+            }
+              
+            });
+        });
+
+        // Mostrar nuevos mensajes
+        socket.on('chatMessage', ({autor, message}) => {
+          
+          if(autor===localStorage.getItem('autor')){
+              const text = `<div class="message sent">
+                <p style="margin:0;">${message} </p>  <p style="font-size:11px; color:gray; text-align:right; margin:0;">${autor}</p>
+                </div>`
+          messages1.insertAdjacentHTML('beforeend',text)
+            }else{
+              const text = `<div class="message received">
+                <p style="margin:0;">${message} </p>  <p style="font-size:11px; color:gray; text-align:right; margin:0;">${autor}</p>
+                </div>`
+              messages1.insertAdjacentHTML('beforeend',text)
+            }
+        });
+        
+
+    </script>
+    <style>
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+}
+
+.sidebar {
+    width: 20%;
+    border-right: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    background-color: #f6f6f6;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #ededed;
+}
+
+.profile-pic {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    width: 60%;
+}
+
+.chats-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.chat-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.chat-item:hover {
+    background-color: #e0e0e0;
+}
+
+.user-pic {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+}
+
+.chat-info {
+    flex: 1;
+}
+
+.chat-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.chat-last-message {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.chat-window {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #ededed;
+    border-bottom: 1px solid #ccc;
+}
+
+.user-info {
+    margin-left: 10px;
+}
+
+.user-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.user-status {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.messages-container {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #e5ddd5;
+}
+
+.message {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 60%;
+}
+
+.message.received {
+    background-color: #fff;
+    align-self: flex-start;
+}
+
+.message.sent {
+    background-color: #dcf8c6;
+    align-self: flex-end;
+}
+
+.chat-footer {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #ededed;
+    border-top: 1px solid #ccc;
+}
+
+.message-input {
+    flex: 1;
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    width: 80%;
+}
+#form{
+    width: 100%;
+}
+
+.send-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    background-color: #34b7f1;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.send-button:hover {
+    background-color: #1a73e8;
+}
+
+     </style>
+</head>
+
+  <body>
+    <div class="container">
+        <div class="sidebar">
+            <header class="sidebar-header">
+                <img src="https://cdn.icon-icons.com/icons2/602/PNG/512/Guest_icon-icons.com_55899.png" alt="Profile Picture" class="profile-pic">
+                <input type="text" placeholder="Busca o inicia un chat" class="search-input" id ="autor">
+            </header>
+            <ul class="chats-list">
+                <li class="chat-item">
+                    <img src="https://img.freepik.com/free-vector/illustration-diverse-people-arms-around-each-other_53876-26693.jpg" alt="User Picture" class="user-pic">
+                    <div class="chat-info">
+                        <h3 class="chat-name" id="nombreAutor">El grupo</h3>
+                        <p class="chat-last-message" id="lastMsg">Ultimo mensaje</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="chat-window">
+            <header class="chat-header">
+                <img src="https://img.freepik.com/free-vector/illustration-diverse-people-arms-around-each-other_53876-26693.jpg" alt="User Picture" class="user-pic">
+                <div class="user-info">
+                    <h3 class="user-name" id="nombreAutor2">El grupo</h3>
+                    <p class="user-status">En linea</p>
+                </div>
+            </header>
+            <div class="messages-container" id="messages">
+               
+            </div>
+            <footer class="chat-footer">
+              <form id="form">
+                <input type="text" placeholder="Escribe un mensaje" id="input" class="message-input" autocomplete="off">
+                <button type="submit" class="send-button">Enviar</button>
+              </form>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>
